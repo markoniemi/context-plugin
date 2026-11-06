@@ -67,6 +67,8 @@ skill owns it, since a cross-skill reference is the thing to avoid.
 - are there other related plugins, maybe from some real authority?
 - is there some good best practices on how to reduce token usage?
 
-### tests [planning, high]
+### tests [planned, high]
+
+plan: [tests.md](tests.md)
 
 - plugin has no tests yet.
