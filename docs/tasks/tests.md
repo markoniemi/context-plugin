@@ -1,6 +1,6 @@
 ---
 id: tests
-status: in_review
+status: done
 priority: high
 ---
 
