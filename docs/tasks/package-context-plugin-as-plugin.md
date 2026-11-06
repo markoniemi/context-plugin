@@ -1,6 +1,6 @@
 ---
 id: package-context-plugin-as-plugin
-status: in_review
+status: done
 priority: medium
 branch: task/package-context-plugin-as-plugin
 ---

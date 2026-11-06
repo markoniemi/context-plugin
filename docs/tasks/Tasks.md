@@ -1,5 +1,5 @@
 ---
-create_branch: true
+create_branch: false
 create_pull_request: false
 ---
 
@@ -40,7 +40,7 @@ Priorities: `high` | `medium` | `low`.
 
 ## Backlog
 
-### package context-plugin as plugin [in_review, medium]
+### package context-plugin as plugin [approved, medium]
 
 plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 
