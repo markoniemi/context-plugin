@@ -1,6 +1,6 @@
 ---
 id: resolve-setup-and-audit-overlap
-status: planned
+status: in_progress
 priority: medium
 ---
 

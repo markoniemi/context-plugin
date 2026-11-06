@@ -49,7 +49,7 @@ plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 - skills are: /context:audit /context:setup
 - should plugin be named context-plugin or token-usage-plugin?
 
-### resolve setup and audit overlap [planned, medium]
+### resolve setup and audit overlap [in_progress, medium]
 
 plan: [resolve-setup-and-audit-overlap.md](resolve-setup-and-audit-overlap.md)
 
@@ -65,4 +65,8 @@ skill owns it, since a cross-skill reference is the thing to avoid.
 ### other related plugins [draft, low]
 
 - are there other related plugins, maybe from some real authority?
-- is there some good best practices on how to
+- is there some good best practices on how to reduce token usage?
+
+### tests [planning, high]
+
+- plugin has no tests yet.
