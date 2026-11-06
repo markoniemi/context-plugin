@@ -52,11 +52,34 @@ skills/
       audit-rules.md      per-file thresholds and their fixes
       maven-output.md     diagnosing noisy Maven builds
       report-template.md  the audit report's shape
+scripts/check.sh       the free checks; check.ps1 is the same for Windows
+docs/token-budget.md   what the plugin costs a session that never uses it
 docs/tasks/            this repository's own backlog
 ```
 
 The plugin follows its own advice: each `SKILL.md` holds the workflow, and the
 long material sits in `references/`, which loads only when a skill reads it.
+
+## Tests
+
+```
+scripts/check.sh          # or .\scripts\check.ps1 on Windows
+```
+
+Three checks, all free — no credential, no model calls, no cost:
+
+| Check | What it catches |
+| :- | :- |
+| `claude plugin validate . --strict` | a manifest or skill that will not load. This is not hypothetical: one of these skills once shipped with its frontmatter on a single unfenced line, which made it invisible to Claude Code. Blocking. |
+| `claude plugin validate . --profile directory` | what the plugin directory would refuse on submission. Informational — the one open warning is `ICON_MISSING`, explained in [docs/token-budget.md](docs/token-budget.md). |
+| always-loaded budget | a skill description growing silently. Blocking above 1200 bytes; currently 1105. |
+
+The same script runs in CI on every push and pull request.
+
+**What is not tested:** which skill fires for a given request. `validate` reads
+the descriptions; it does not exercise them. Checking that "my CLAUDE.md is a
+mess" reaches `audit` rather than `setup` needs `claude plugin eval`, which spends
+real money per run — tracked as the `trigger evals` entry in the backlog.
 
 ## License
 
