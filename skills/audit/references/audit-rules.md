@@ -44,8 +44,16 @@ Fix: delete them, or replace with the specific, non-obvious rule the author actu
 
 ## LARGE_DIR_NOT_DENIED
 A large generated/vendored directory (node_modules, build, dist, target, .venv, generated, vendor) exists and is not in a `permissions.deny` Read rule.
-Fix: suggest the deny rules from "Excluding paths" in `templates.md`, after checking Claude doesn't need to read those files. Info only.
+Fix: suggest deny rules in `.claude/settings.json` (shared) or `.claude/settings.local.json` (personal), after checking Claude doesn't need to read those files — a generated API client it must call correctly is a legitimate read. Info only.
+
+```json
+{
+  "permissions": {
+    "deny": ["Read(./build/**)", "Read(./dist/**)", "Read(./node_modules/**)", "Read(./**/generated/**)"]
+  }
+}
+```
 
 ## NO_ROOT_FILE
 No CLAUDE.md or AGENTS.md at the repo root.
-Fix: switch to the Setup workflow.
+Fix: there is nothing to audit. Run `/context:setup` to write one, then audit the result.

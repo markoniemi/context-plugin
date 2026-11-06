@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Audit a codebase for unnecessary AI coding assistant token consumption. Evaluates CLAUDE.md and AGENTS.md, documentation, skills, MCP servers, build and test commands, repository exploration, subagents, and context management, then produces a prioritized improvement report without modifying project files. Use when the user asks why Claude Code is expensive, wants token usage reduced, or wants their context files and skills reviewed for bloat.
+description: Audit a codebase for unnecessary AI coding assistant token consumption. Evaluates CLAUDE.md and AGENTS.md, documentation, skills, MCP servers, build and test commands, repository exploration, subagents, and context management, then reports a prioritized fix plan — changing nothing unless the user asks for it afterwards. Use when the user asks why Claude Code is expensive or slow, wants token usage or context size reduced, or wants existing context files and skills checked for bloat — including "my CLAUDE.md is a mess", "Claude Code is burning tokens", or "these instructions have grown too large".
 ---
 
 # Token Usage Audit
@@ -10,7 +10,8 @@ them. **This skill is an audit, not an implementation task:** do not create,
 modify, move or delete project files. At the end, offer to implement the
 recommendations as a separate phase.
 
-To set context files up or restructure them, use the `setup` skill instead.
+With no root `CLAUDE.md` or `AGENTS.md` there is nothing to audit: run
+`/context:setup` to write one, then audit the result.
 
 ## Principles
 
@@ -43,11 +44,11 @@ Estimate **startup cost**: root files + rules without `paths:` frontmatter +
 skill descriptions + everything pulled in by `@imports`. Nested `CLAUDE.md`
 files and skill bodies load on demand and do not count.
 
-Check each file against the per-file rules in the `setup` skill's
-`references/audit-rules.md` — one section per check, each with its threshold and
-its fix (root too long, module too long, eager `@import`, unscoped rule,
-duplicate content, oversized skill body, weak skill description, generic
-advice). Read only the sections whose condition you actually see.
+Check each file against the per-file rules in `references/audit-rules.md` — one
+section per check, each with its threshold and its fix (root too long, module too
+long, eager `@import`, unscoped rule, duplicate content, oversized skill body,
+weak skill description, generic advice). Read only the sections whose condition
+you actually see.
 
 Then, beyond those thresholds, check for:
 

@@ -11,18 +11,22 @@ when it is needed, and reports what is costing tokens when it already has not.
 
 ## Commands
 
+The two skills split by what they do, not by what they look at: one **writes**,
+the other **measures**.
+
 | Command | What it does |
 | :- | :- |
-| `/context:setup` | Sets up or restructures the context files: a small root `CLAUDE.md`, one memory file per module that needs it, `.claude/rules` with `paths:` frontmatter, and skills that load on demand. Writes files. |
-| `/context:audit` | Audits the repository for avoidable token consumption — context files, docs, skills, MCP servers, build scope, exploration habits, build output, caching, subagents — and reports a prioritized plan. Writes nothing. |
+| `/context:setup` | Writes the context files: a small root `CLAUDE.md`, one memory file per module that needs it, and `.claude/rules` with `paths:` frontmatter. Maps the repo, collects the per-module commands, and asks you for the pitfalls it cannot infer. |
+| `/context:audit` | Measures what the existing context costs — context files, docs, skills, MCP servers, build scope, exploration habits, build output, caching, subagents — and reports a prioritized fix plan. Changes nothing until you say so. |
 
-`/context:setup` is the one to reach for when the structure is wrong or missing.
-`/context:audit` is the one to reach for when the question is "why is this so
-expensive?" — it ends by asking whether you want its recommendations applied.
+Reach for `/context:setup` when the files do not exist yet or need rewriting, and
+`/context:audit` when the question is "why is this so expensive?". The audit ends
+by offering to apply its own recommendations, so it covers diagnosis through to
+the fix; setup does no auditing at all.
 
-Both skills also trigger on their own, without the slash command, when a request
-matches their description: "my CLAUDE.md is a mess", "reduce token usage",
-"Claude Code is burning tokens".
+Both skills also trigger without the slash command when a request matches their
+description — "set up CLAUDE.md for this repo" reaches setup, "my CLAUDE.md is a
+mess" or "Claude Code is burning tokens" reaches audit.
 
 ## Install
 
@@ -41,11 +45,11 @@ skills/
   setup/
     SKILL.md
     references/
-      templates.md     root and module memory file templates
-      audit-rules.md   per-file thresholds and their fixes
+      templates.md        root and module memory file templates
   audit/
     SKILL.md
     references/
+      audit-rules.md      per-file thresholds and their fixes
       maven-output.md     diagnosing noisy Maven builds
       report-template.md  the audit report's shape
 docs/tasks/            this repository's own backlog
