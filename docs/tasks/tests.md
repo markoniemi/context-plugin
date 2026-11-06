@@ -95,14 +95,12 @@ Cases that would have been worth writing:
 Cost, for whenever this is reconsidered: 6 cases × 3 runs × 2 ablation arms is 36
 `claude` child runs per pass, bounded with `--max-cost-usd` and `--runs`.
 
-## Open questions for the human
+## Answered
 
-1. **Trigger discrimination now has no coverage at all.** It was the highest-value
-   thing an eval would have caught, and it is the newest and least evidenced part
-   of the plugin — a request firing the wrong skill passes every check this task
-   adds. Options: leave it, and rely on noticing while using the plugin; or let me
-   add a `trigger evals` entry at low priority for when the budget question is
-   worth revisiting. Say which.
-2. **Two check scripts or one?** The plan writes `check.ps1` and `check.sh`,
-   because you develop on Windows and CI is Linux. Say if you would rather have
-   only the shell script.
+Both answered 2026-11-06:
+
+1. **Trigger discrimination has no coverage under this scope** — a request firing
+   the wrong skill passes every check this task adds. Tracked separately: the
+   `trigger evals` backlog entry, `draft` at low priority.
+2. **Two check scripts**, `check.ps1` and `check.sh`, as step 3 describes: Windows
+   for development, shell for CI.

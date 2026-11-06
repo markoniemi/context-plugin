@@ -72,3 +72,15 @@ skill owns it, since a cross-skill reference is the thing to avoid.
 plan: [tests.md](tests.md)
 
 - plugin has no tests yet.
+
+### trigger evals [draft, low]
+
+Nothing tests which skill fires for a given request. `claude plugin validate`
+reads the descriptions; it does not exercise them. So the `setup` / `audit` split
+rests on reasoning alone, and a request reaching the wrong skill passes every
+check the `tests` task adds.
+
+Fixing that means a `claude plugin eval` suite, which costs money per run: around
+36 `claude` child runs for a full pass. Deferred for that reason. The cases worth
+writing, and the grader wrinkle around `--ablation with-without`, are recorded
+under "Dropped from this plan" in [tests.md](tests.md).
