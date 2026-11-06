@@ -19,27 +19,40 @@ skill owns it, since a cross-skill reference is the thing to avoid.
 
 ## The decision
 
-**`audit` owns the audit. `setup` keeps a short inline self-check and nothing
-else.**
+Decided 2026-11-06, after asking whether `setup` is needed at all: **two skills,
+re-split as write versus measure.** `setup` authors context files and does no
+auditing whatsoever; `audit` diagnoses, plans and — when asked — applies.
 
-Why not "setup defers entirely": a setup run that writes eight files and then
-says "now run `/context:audit`" leaves the user holding a second step for
-problems setup itself just created. A handful of checks against what it wrote is
-part of writing it.
+The question was fair, because `audit` already plans the fix: report section D is
+a prioritized table, F is the per-file retain / shorten / move / remove list, K is
+the implementation order, and the skill ends by offering to implement. For a repo
+that *has* context files, `audit` covers the whole arc, and setup's "Audit
+workflow" section is dead weight.
 
-Why not "setup keeps its five-step audit workflow": that is the duplication.
-
-So the split is by depth, and it decides the file move:
+What survives is the one thing `audit` structurally cannot do: author from
+nothing. Map the repo, find the per-module build and test commands, **ask the
+human for the pitfalls** — the highest-value lines and the only ones not
+inferable — and write the files from templates. With no root file there is
+nothing to audit; `audit-rules.md` says as much in `NO_ROOT_FILE`.
 
 | | `setup` | `audit` |
 | :- | :- | :- |
-| Scope | the files it just wrote | the whole repo, plus docs, MCP, build scope, output, caching |
-| Depth | 4 inline checks, no file read | the full rule set and a report |
+| Precondition | no usable context files | context files exist |
+| Input | repo structure plus the human's knowledge | the files themselves |
+| Output | files on disk | a report, then files only if asked |
 | Owns `audit-rules.md` | no | yes |
 
-`audit-rules.md` moves to `skills/audit/references/`. Setup's self-check is
-inline and short enough to need no reference file, so **no cross-skill reference
-remains in either direction** — which is the point.
+The rejected alternative was one merged `context` skill, which would halve the
+always-loaded description cost — around 100-200 tokens on every request, which is
+this plugin's own thesis turned on itself. Rejected because a single skill that
+sometimes writes files and sometimes refuses to is harder to predict, and
+`audit`'s "writes nothing unless you say so" guarantee is what makes it safe to
+run on a repo you do not own. The command would also come out as
+`/context:context` or need `commands/` wrappers. Worth revisiting if the
+descriptions grow.
+
+`audit-rules.md` moves to `skills/audit/references/`, and **no cross-skill
+reference remains in either direction** — which is the point.
 
 ## Steps
 
@@ -58,19 +71,21 @@ remains in either direction** — which is the point.
    * `NO_ROOT_FILE` says "switch to the Setup workflow" — make it name
      `/context:setup`.
 
-4. **`skills/setup/SKILL.md`** — replace the whole `## Audit workflow` section
-   (its five numbered steps) with a `## Self-check` section of four checks
-   against the files just written:
-   * root file ≤ 80 lines,
-   * no `@import` of a file over ~50 lines, and no `@import` of a missing path,
-   * every `.claude/rules/*.md` either has `paths:` frontmatter or is short,
-   * no line that was copied verbatim into two files.
+4. **`skills/setup/SKILL.md`** — delete the whole `## Audit workflow` section,
+   all five steps. No self-check section replaces it: under B the skill does no
+   auditing, and a four-item checklist would be the duplication in miniature.
 
-   Then one sentence: for anything deeper — docs, skills, MCP, build scope,
-   command output, caching, subagents — run `/context:audit`.
+   Instead, the limits live where the writing happens, as a spec for the output
+   rather than a review of it — the write steps already say "target ≤ 50 lines,
+   hard ceiling 80" and "target ≤ 60 lines", so keep those and add the same kind
+   of inline constraint for imports (point to a doc rather than `@import` it
+   unless the file is small and needed every session).
 
-   Setup workflow step 8 currently reads "Run the audit (below)"; point it at the
-   self-check. Target: setup stays under 60 lines.
+   Setup workflow step 8 currently reads "Run the audit (below)". Replace it with
+   one sentence: for anything deeper than the files just written — docs, skills,
+   MCP, build scope, command output, caching, subagents — run `/context:audit`.
+
+   Target: setup drops from 54 to roughly 40 lines.
 
 5. **`skills/setup/SKILL.md` frontmatter description.** It currently claims the
    audit as well ("Sets up **and audits**", "check whether existing context files
@@ -92,14 +107,15 @@ remains in either direction** — which is the point.
    * `Grep` for `audit-rules`, `audit workflow`, `templates.md` and `Audit` across
      `skills/` and `README.md` — no reference may point into the other skill's
      directory, and no path may point at the old location.
-   * Line counts: `setup/SKILL.md` ≤ 60, `audit/SKILL.md` unchanged at ~183.
+   * Line counts: `setup/SKILL.md` ≈ 40, `audit/SKILL.md` unchanged at ~183.
    * Both descriptions still parse as frontmatter.
+   * No occurrence of "audit" left in `setup/SKILL.md` except the one sentence
+     pointing at `/context:audit`.
 
 ## Open questions for the human
 
-1. **Is four self-checks the right size for setup?** The alternative is zero —
-   setup writes files and says nothing about them. Say which you prefer.
-2. **No tests**, as with the previous task: markdown and JSON, no harness. The
+1. **No tests**, as with the previous task: markdown and JSON, no harness. The
    real check is installing the plugin and seeing which skill fires for "my
-   CLAUDE.md is a mess" (should be `setup`) versus "why is Claude Code so
-   expensive" (should be `audit`). That is yours to run.
+   CLAUDE.md is a mess" (should be `audit` — the files exist) versus "set up
+   CLAUDE.md for this repo" (should be `setup`). That is yours to run, and the
+   `tests` backlog entry now covers the general problem.
