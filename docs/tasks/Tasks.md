@@ -40,7 +40,7 @@ Priorities: `high` | `medium` | `low`.
 
 ## Backlog
 
-### package context-plugin as plugin [planned, medium]
+### package context-plugin as plugin [in_progress, medium]
 
 plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 
@@ -48,3 +48,8 @@ plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 - readme which explains what plugin does
 - skills are: /context:audit /context:setup
 - should plugin be named context-plugin or token-usage-plugin?
+
+### other related plugins [draft, low]
+
+- are there other related plugins, maybe from some real authority? 
+- 

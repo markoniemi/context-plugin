@@ -1,6 +1,6 @@
 ---
 id: package-context-plugin-as-plugin
-status: planned
+status: in_progress
 priority: medium
 branch: task/package-context-plugin-as-plugin
 ---
@@ -103,9 +103,7 @@ token usage is the motivation, not the scope.
 ## Open questions for the human
 
 1. **Version.** Plan says `0.1.0`. Change it if you want to start elsewhere.
-2. **Rewriting the audit skill (steps 2-3).** This is the bulk of the work and it
-   is not "packaging". Options: do it in this task, or package first and split the
-   audit skill as its own backlog entry. Step 2 (broken frontmatter) must happen
-   either way — the skill is dead without it.
+2. **Rewriting the audit skill (steps 2-3).** Answered 2026-11-06: do it in this
+   task.
 3. **No `commands/`, `agents/` or `hooks/`** are planned: two skills only. Say so
    if you want a `/context:help` style command as well.
