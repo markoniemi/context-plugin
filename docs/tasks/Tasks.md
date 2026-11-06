@@ -49,7 +49,7 @@ plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 - skills are: /context:audit /context:setup
 - should plugin be named context-plugin or token-usage-plugin?
 
-### resolve setup and audit overlap [in_review, medium]
+### resolve setup and audit overlap [done, medium]
 
 plan: [resolve-setup-and-audit-overlap.md](resolve-setup-and-audit-overlap.md)
 
