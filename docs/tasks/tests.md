@@ -108,7 +108,8 @@ Two findings that changed the plan:
    listing icon **only once**, at first save or submission. A generated placeholder
    would permanently occupy the real icon's slot, which is worse than the warning.
    The scripts run that profile without `--strict`, print the warning, and do not
-   fail on it. An icon is a human's to supply — worth a backlog entry.
+   fail on it. An icon is a human's to supply; asked 2026-11-06 and declined, so
+   no backlog entry — the warning stands as the record.
 
 Also fixed while verifying: the two scripts disagreed by 6 bytes, because `awk`
 counted UTF-8 bytes including `CR` while PowerShell counted UTF-16 characters —
