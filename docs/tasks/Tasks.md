@@ -49,6 +49,17 @@ plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 - skills are: /context:audit /context:setup
 - should plugin be named context-plugin or token-usage-plugin?
 
+### resolve setup and audit overlap [draft, medium]
+
+`skills/setup/SKILL.md` carries its own "Audit workflow" section, and its setup
+workflow ends by telling the agent to run it. The `audit` skill now covers the
+same ground in more depth, and both read `setup/references/audit-rules.md`.
+
+Decide where the audit lives: setup keeps a short self-check and defers the real
+audit to the `audit` skill, or the audit workflow moves out of setup entirely and
+setup just points at `/context:audit`. Then move `audit-rules.md` to whichever
+skill owns it, since a cross-skill reference is the thing to avoid.
+
 ### other related plugins [draft, low]
 
 - are there other related plugins, maybe from some real authority?
