@@ -40,7 +40,7 @@ Priorities: `high` | `medium` | `low`.
 
 ## Backlog
 
-### package context-plugin as plugin [in_progress, medium]
+### package context-plugin as plugin [in_review, medium]
 
 plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 
@@ -51,5 +51,5 @@ plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 
 ### other related plugins [draft, low]
 
-- are there other related plugins, maybe from some real authority? 
-- 
+- are there other related plugins, maybe from some real authority?
+- is there some good best practices on how to

@@ -1,6 +1,6 @@
 ---
 id: package-context-plugin-as-plugin
-status: in_progress
+status: in_review
 priority: medium
 branch: task/package-context-plugin-as-plugin
 ---
@@ -99,6 +99,31 @@ token usage is the motivation, not the scope.
       then `/plugin install context@context-plugin`) and confirm `/context:audit`
       and `/context:setup` appear and load. This step is the human's to run, since
       it is a slash command in their session.
+
+## Result
+
+Done on `task/package-context-plugin-as-plugin`, commit `08907be`:
+
+* `skills/context-setup/` → `skills/setup/`, `skills/token-usage-audit/` →
+  `skills/audit/`, with `name:` set to `setup` and `audit`.
+* Audit skill frontmatter repaired; body restored to markdown and cut from 772 to
+  183 lines. Section 9A moved to `references/maven-output.md`, section 15 to
+  `references/report-template.md`, and the per-file threshold list replaced by a
+  pointer to the setup skill's `references/audit-rules.md`.
+* `.claude-plugin/plugin.json` (`name: context`, version `0.1.0`),
+  `.claude-plugin/marketplace.json` (`name: context-plugin`), `LICENSE` (MIT),
+  root `README.md`.
+* `.gitignore` left as it was — nothing else is generated here.
+
+Deviations from the plan:
+
+* The audit SKILL.md is 183 lines, not the planned ≤ 150. Cutting further would
+  have removed audit steps rather than reference material.
+* No unit tests: the plugin is markdown and JSON with no test harness, so
+  verification is the JSON parse plus a real install.
+
+Verification run: both JSON files parse (`ConvertFrom-Json`). The install check is
+still open — see below.
 
 ## Open questions for the human
 
