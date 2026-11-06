@@ -40,7 +40,7 @@ Priorities: `high` | `medium` | `low`.
 
 ## Backlog
 
-### package context-plugin as plugin [approved, medium]
+### package context-plugin as plugin [done, medium]
 
 plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 
@@ -49,7 +49,7 @@ plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 - skills are: /context:audit /context:setup
 - should plugin be named context-plugin or token-usage-plugin?
 
-### resolve setup and audit overlap [draft, medium]
+### resolve setup and audit overlap [planned, medium]
 
 `skills/setup/SKILL.md` carries its own "Audit workflow" section, and its setup
 workflow ends by telling the agent to run it. The `audit` skill now covers the
