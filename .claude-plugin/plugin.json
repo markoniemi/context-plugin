@@ -1,0 +1,14 @@
+{
+  "name": "context",
+  "displayName": "context",
+  "version": "0.1.0",
+  "description": "Keeps an agent's context small: sets up CLAUDE.md / AGENTS.md, module memory files, rules and skills, and audits a repository for avoidable token consumption.",
+  "author": {
+    "name": "Marko Niemi",
+    "url": "https://github.com/markoniemi"
+  },
+  "homepage": "https://github.com/markoniemi/context-plugin",
+  "repository": "https://github.com/markoniemi/context-plugin",
+  "license": "MIT",
+  "keywords": ["context", "tokens", "claude-md", "agents-md", "audit"]
+}

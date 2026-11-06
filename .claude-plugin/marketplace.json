@@ -1,0 +1,16 @@
+{
+  "name": "context-plugin",
+  "description": "Marko Niemi's marketplace: the context plugin, for token-efficient agent context.",
+  "owner": {
+    "name": "Marko Niemi",
+    "url": "https://github.com/markoniemi"
+  },
+  "plugins": [
+    {
+      "name": "context",
+      "source": "./",
+      "description": "Token-efficient agent context, as two skills: /context:setup and /context:audit.",
+      "category": "workflow"
+    }
+  ]
+}
