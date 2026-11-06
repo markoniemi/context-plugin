@@ -1,6 +1,6 @@
 ---
 id: tests
-status: planned
+status: in_progress
 priority: high
 ---
 
