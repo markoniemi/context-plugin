@@ -51,6 +51,8 @@ plan: [package-context-plugin-as-plugin.md](package-context-plugin-as-plugin.md)
 
 ### resolve setup and audit overlap [planned, medium]
 
+plan: [resolve-setup-and-audit-overlap.md](resolve-setup-and-audit-overlap.md)
+
 `skills/setup/SKILL.md` carries its own "Audit workflow" section, and its setup
 workflow ends by telling the agent to run it. The `audit` skill now covers the
 same ground in more depth, and both read `setup/references/audit-rules.md`.
