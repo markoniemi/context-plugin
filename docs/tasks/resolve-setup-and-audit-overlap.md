@@ -1,6 +1,6 @@
 ---
 id: resolve-setup-and-audit-overlap
-status: in_progress
+status: in_review
 priority: medium
 ---
 
@@ -111,6 +111,38 @@ reference remains in either direction** — which is the point.
    * Both descriptions still parse as frontmatter.
    * No occurrence of "audit" left in `setup/SKILL.md` except the one sentence
      pointing at `/context:audit`.
+
+## Result
+
+Done on `main`, commit `6ce1acd` (no branch: `create_branch` is off).
+
+* `audit-rules.md` moved to `skills/audit/references/`. Its two outward
+  references repointed: the deny-rule snippet is now inline in
+  `LARGE_DIR_NOT_DENIED`, and `NO_ROOT_FILE` names `/context:setup`.
+* `skills/audit/SKILL.md` section 2 points at the local `references/audit-rules.md`;
+  the "use the setup skill instead" line became the `NO_ROOT_FILE` case.
+* `skills/setup/SKILL.md`: `## Audit workflow` deleted, the two-mode paragraph
+  deleted, the import constraint added as write step 7, the threshold caveat kept
+  next to the write steps, and a closing pointer to `/context:audit`. 54 → 41
+  lines. "audit" now appears twice in the file: the description's deferral
+  sentence and that pointer.
+* Descriptions re-split: setup owns creating and restructuring, audit owns "why is
+  this expensive", "my CLAUDE.md is a mess", "burning tokens".
+* `README.md`: the command table now says write versus measure, and the layout
+  tree shows `audit-rules.md` under the audit skill.
+
+Verified: `Grep` for `audit-rules`, `templates.md` and `audit workflow` across
+`skills/` and `README.md` shows no reference crossing between the two skills and
+no path at the old location; both frontmatter blocks parse; setup is 41 lines,
+audit 184.
+
+Deviation: the audit description is 616 characters, not the planned ≤ 500. Left as
+is — the plugin's own `SKILL_DESCRIPTION` rule warns above 1024, and the extra
+phrasing is what makes audit win the "my CLAUDE.md is a mess" request instead of
+setup.
+
+No unit tests: markdown and JSON with no harness, same as the previous task. The
+`tests` backlog entry covers it.
 
 ## Open questions for the human
 
