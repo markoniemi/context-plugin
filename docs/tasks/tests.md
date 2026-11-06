@@ -1,6 +1,6 @@
 ---
 id: tests
-status: in_progress
+status: in_review
 priority: high
 ---
 
@@ -70,6 +70,55 @@ case can catch that. See the open question below.
    0, and `plugin details context` prints a cost matching what step 2 recorded. If
    `--profile directory` objects to something, fix it or report it — do not drop
    the flag to make the check pass.
+
+## Result
+
+Done on `main`, commits `dd8ce5f` and `89c9704` (no branch: `create_branch` is
+off).
+
+* `scripts/check.sh` and `scripts/check.ps1` — `validate . --strict` (blocking),
+  the directory profile (informational), and the always-loaded budget (blocking).
+* `.github/workflows/check.yml` — `bash scripts/check.sh` on push, pull request
+  and manual dispatch. Node 22, `npm install -g @anthropic-ai/claude-code`, no
+  secret.
+* `docs/token-budget.md` — the measured figure and what is not enforced.
+* README gained a "Tests" section, including the sentence that triggering
+  behaviour is untested.
+
+Verified by running both scripts end to end:
+
+```
+validate . --strict                      exit 0, "Validation passed"
+validate . --profile directory           exit 0, 1 warning (ICON_MISSING)
+validate . --profile directory --strict  exit 1  <- not used by the scripts
+always-loaded budget   audit 633 + setup 472 = 1105 bytes (~276 tokens), ceiling 1200
+scripts/check.ps1                        exit 0, "All checks passed."
+scripts/check.sh                         exit 0, "All checks passed."
+```
+
+Two findings that changed the plan:
+
+1. **`claude plugin details context` cannot run here.** It needs the plugin
+   installed and rejects `--plugin-dir` (exit 255), so it works against neither a
+   bare checkout nor CI. The budget is measured from the files instead — UTF-8
+   bytes of the `name` and `description` lines — and `token-budget.md` records the
+   install commands for getting the authoritative figure.
+2. **`--profile directory --strict` fails on `ICON_MISSING`.** Not fixed, and not
+   papered over: the fix is a square PNG of 512-2048 px, and that file becomes the
+   listing icon **only once**, at first save or submission. A generated placeholder
+   would permanently occupy the real icon's slot, which is worse than the warning.
+   The scripts run that profile without `--strict`, print the warning, and do not
+   fail on it. An icon is a human's to supply — worth a backlog entry.
+
+Also fixed while verifying: the two scripts disagreed by 6 bytes, because `awk`
+counted UTF-8 bytes including `CR` while PowerShell counted UTF-16 characters —
+which undercounts every em dash by two. Both now count UTF-8 bytes with `CR`
+stripped and agree exactly.
+
+Not verified: the GitHub Actions workflow itself. It has never run — there is no
+remote push in this task — so whether `claude plugin validate` works on a fresh
+CI machine without any credential or onboarding step is untested. The first push
+will say.
 
 ## Dropped from this plan
 
