@@ -28,6 +28,21 @@ Both skills also trigger without the slash command when a request matches their
 description — "set up CLAUDE.md for this repo" reaches setup, "my CLAUDE.md is a
 mess" or "Claude Code is burning tokens" reaches audit.
 
+## Relation to Anthropic's own tooling
+
+Anthropic ships a `context-setup` skill covering the same ground as one skill
+with a setup mode and an audit mode, and this plugin's per-file audit rules
+closely match its `references/audit-rules.md`. Claude Code also has built-in
+commands that measure what an audit would otherwise estimate: `/context`,
+`/usage` and `/doctor prompt-audit`. Both skills here now defer to those rather
+than guessing.
+
+What this plugin adds over them: build scope and module targeting, build and test
+output, repository exploration discipline, documentation structure, and two
+skills that cannot be confused with each other instead of one guessing a mode
+from the request. [docs/prior-art.md](docs/prior-art.md) has the file-by-file
+comparison and the full list of what the official docs changed about these rules.
+
 ## Install
 
 ```
@@ -50,10 +65,12 @@ skills/
     SKILL.md
     references/
       audit-rules.md      per-file thresholds and their fixes
+      loading-model.md    what loads when, and what it costs
       maven-output.md     diagnosing noisy Maven builds
       report-template.md  the audit report's shape
 scripts/check.sh       the free checks; check.ps1 is the same for Windows
 docs/token-budget.md   what the plugin costs a session that never uses it
+docs/prior-art.md      Anthropic's own tooling, and the gaps against its docs
 docs/tasks/            this repository's own backlog
 ```
 

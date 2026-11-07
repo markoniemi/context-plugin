@@ -1,6 +1,6 @@
 ---
 id: other-related-plugins
-status: in_progress
+status: in_review
 priority: low
 ---
 
@@ -93,6 +93,62 @@ Three consequences, and they are the task:
    plugin keeps, drops and adds, and the collision from consequence 2. One page.
    This task's deliverable is that page plus whatever backlog entries step 5
    produces; it writes no skill code unless step 3 goes the porting way.
+
+## Result
+
+Done on `main`, no branch (`create_branch` is off). Research in
+[../prior-art.md](../prior-art.md) — commits `d13478c`, `88ecc7d`, `0f0eec3` —
+then the rule changes it called for.
+
+**Answers to the open questions, from the human on 2026-11-07:** question 2, this
+plugin does more than the official skill, and the README now says what; question
+3, the script port is its own backlog entry. Question 1 was not answered
+explicitly, so the README states the observable resemblance to Anthropic's
+`context-setup` skill without claiming how it came about — sharpen that wording
+if the provenance is deliberate.
+
+Three rules were wrong and are fixed:
+
+* `audit/SKILL.md` §5 claimed "tool definitions are paid for on every request".
+  Tool search defers them by default. The section is rewritten around what is
+  actually paid — server instructions and tool names — and no longer treats
+  server count as a finding.
+* `UNSCOPED_RULE` recommended `paths:` unconditionally. A path-scoped rule is
+  summarized away by compaction, so the trade-off is now stated.
+* `ROOT_TOO_LONG` and `MODULE_TOO_LONG` presented 80 and 100 lines as though
+  authoritative. The documented target is 200; ours are now labelled as a
+  deliberately stricter house limit, with Claude Code's own startup and `/status`
+  warnings named as the thing to read first.
+
+Five finding codes added, all in `references/` where they cost nothing until a
+condition matches: `SKILL_BODY_ORDER`, `OUTDATED_EMPHASIS`,
+`RULE_NEEDS_ENFORCEMENT`, `AUTO_MEMORY_LARGE`, `DEAD_INSTRUCTION`,
+`MCP_INSTRUCTIONS_LARGE`.
+
+New `skills/audit/references/loading-model.md` — the startup set including auto
+memory, what survives compaction and the 5,000/25,000-token skill body caps, MCP
+cost after tool search with the conditions under which deferral is off, the
+`initialize` probe for measuring a server's instructions, the built-in commands,
+and guidance-versus-enforcement.
+
+Both skills now defer to `/context`, `/usage` and `/doctor prompt-audit` instead
+of estimating what those measure. §10 names them; §2 asks for `/context` output
+before computing a startup figure.
+
+`skills/setup/SKILL.md` gained the authoring side: imports don't reduce cost,
+path-scoped rules don't survive compaction, auto memory counts in the startup
+total, a context file is guidance not configuration, `AGENTS.md` is read directly
+now (and never point at it in words), and three kinds of advice written for older
+models not to write at all.
+
+Verified: `scripts/check.ps1` exits 0 and the always-loaded budget is unchanged at
+**1105 bytes**, because no description was touched. `audit/SKILL.md` grew from 184
+to 234 lines, 12233 bytes ≈ 3058 tokens — under the 5,000-token per-skill
+compaction cap it now documents, and under its own `SKILL_TOO_LONG` info
+threshold of 300 lines.
+
+Not done, by decision: porting `audit_context.py`, now the `port the audit script`
+backlog entry.
 
 ## Open questions
 

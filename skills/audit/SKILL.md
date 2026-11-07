@@ -41,14 +41,29 @@ Inventory every `CLAUDE.md` / `AGENTS.md` (root, nested, `.claude/CLAUDE.md`),
 `.claude/rules/*.md` and `SKILL.md`. Line counts via `wc -l`; tokens ≈ chars ÷ 4.
 
 Estimate **startup cost**: root files + rules without `paths:` frontmatter +
-skill descriptions + everything pulled in by `@imports`. Nested `CLAUDE.md`
-files and skill bodies load on demand and do not count.
+skill descriptions + everything pulled in by `@imports` + **auto memory** (the
+first 200 lines or 25KB of `~/.claude/projects/<project>/memory/MEMORY.md`, which
+lives outside the repo and is written by Claude, not the team) + MCP tool names
+and server instructions. Nested `CLAUDE.md` files and skill bodies load on demand
+and do not count. `references/loading-model.md` has the full list and what
+survives compaction.
+
+Before estimating, ask the user for the output of `/context` — it reports the
+real breakdown by category, including which memory files loaded. Prefer it over
+any number computed here, and say which findings came from it.
 
 Check each file against the per-file rules in `references/audit-rules.md` — one
 section per check, each with its threshold and its fix (root too long, module too
 long, eager `@import`, unscoped rule, duplicate content, oversized skill body,
-weak skill description, generic advice). Read only the sections whose condition
-you actually see.
+weak skill description, generic advice, advice written for older models, rules
+that need enforcement rather than instruction, auto memory, dead instructions).
+Read only the sections whose condition you actually see.
+
+Two checks here are worth naming because they are easy to miss and cost nothing
+to make: an absolute rule ("never commit to `main`") sitting in a context file
+is guidance Claude may override, and belongs in a hook or a deny rule; and
+`IMPORTANT`/ALL CAPS emphasis makes current models over-apply a rule rather than
+follow it.
 
 Then, beyond those thresholds, check for:
 
@@ -81,15 +96,28 @@ recurring workflow — but not one per coding convention.
 
 ## 5. MCP servers
 
-From the accessible MCP configuration, identify configured servers and roughly
-how many tools each contributes. Tool definitions are paid for on every request.
+**Server count is not the finding.** Tool search is on by default and defers tool
+definitions, so adding servers has little effect on the context window. What is
+still paid at session start is each server's **instructions** (cut at 4,096
+characters) and its tool names. Warn on a server whose instructions pass ~1,000
+characters, not on a project that has six servers.
+
+Measure before judging, cheapest first: the user's `/context` and `/usage` output
+covers every server with real numbers, including stdio and authenticated ones;
+the repo's `.mcp.json` is what the repo imposes on everyone who clones it, and is
+the only part that is a finding *about the repo*. `references/loading-model.md`
+has the `MCP_INSTRUCTIONS_LARGE` measuring procedure, the conditions under which
+deferral is off entirely — old models, some cloud providers, `alwaysLoad` — and
+the tool-output limits, which is where MCP now actually spends.
 
 Flag servers that merely wrap shell work — builds, tests, git, file search. Local
-builds and tests belong in Bash. MCP earns its tokens when it provides something
+builds and tests belong in Bash, and a CLI (`gh`, `aws`, `gcloud`, `sentry-cli`)
+adds no per-tool listing at all. MCP earns its tokens when it provides something
 a shell cannot: structured CI results, remote build management, issue tracking,
 code-quality integrations.
 
 Distinguish *configured* servers from servers actually loaded into this session.
+`/mcp` disables ones that are configured but unused.
 
 ## 6. Build scope and module targeting
 
@@ -144,6 +172,10 @@ grep -E "ERROR|FAILURE|Tests run:|BUILD SUCCESS|BUILD FAILURE" "$LOG" | tail -40
 exit $status
 ```
 
+Better than writing this into every command: a `PreToolUse` hook can rewrite a
+test command to filter failures, so the output shrinks for every call without
+anyone remembering to do it. See `references/loading-model.md`.
+
 Never recommend suppressing the diagnostics needed to investigate a failure.
 
 For a project whose builds are genuinely noisy — plugin banners, Spring startup,
@@ -154,24 +186,42 @@ whether a wrapper script is justified.
 ## 9. Session-level habits
 
 - **Model and reasoning effort** — cheaper model and lower effort for routine or
-  mechanical edits, stronger for architecture and hard debugging. Session
-  settings, not project configuration, and not every assistant exposes them.
+  mechanical edits, stronger for architecture and hard debugging. Thinking is
+  billed as output, and the default budget can be tens of thousands of tokens per
+  request. Session settings, not project configuration, and not every assistant
+  exposes them.
 - **Prompt caching** — editing context files mid-session, changing MCP
   configuration and switching models all disturb the stable prefix. Finalize
   instructions before a session; change configuration between sessions. Don't
   claim a given change always resets every cache — that depends on the provider.
-- **Subagents** — flag them for trivial edits, several agents reading the same
-  files, and duplicated findings. They earn their keep on independently
-  investigable work; parallelism alone is not a reason, and the handoff costs
-  tokens too.
+- **Clearing and compacting** — `/clear` between unrelated tasks costs nothing,
+  while `/compact` reads the whole conversation to summarize it and is itself a
+  large request on a big context. A project can set a `# Compact instructions`
+  section in its root file to control what summaries keep.
+- **Subagents** — they cut context as well as spending it: verbose work delegated
+  to one keeps the output in its window and returns a summary, which is the main
+  legitimate reason to use one. Flag them for trivial edits, several agents
+  reading the same files, and duplicated findings. Parallelism alone is not a
+  reason, and the handoff costs tokens too.
 
 ## 10. Measurement
 
-Check whether the project has any way to see usage: a cost or usage command,
-context inspection, provider usage reports, historical tracking. Recommend
-measuring an equivalent task before and after — input, output, cache-read and
-cache-write tokens, tool calls, files inspected, build scope, and whether the
-result was still correct. Token savings and time savings are different things.
+Claude Code measures most of this already, so ask for its output before
+estimating anything:
+
+- `/context` — live breakdown by category, including which context and auto
+  memory files loaded.
+- `/usage` — usage attributed to individual skills, subagents, plugins and MCP
+  servers, flagging long context and cache misses once either passes 10%.
+- `/doctor prompt-audit` — instruction files checked for advice written for older
+  models, references to files that no longer exist, and files that contradict
+  each other.
+
+Where those cover a finding, cite their numbers instead of estimating, and say so.
+Then recommend measuring an equivalent task before and after — input, output,
+cache-read and cache-write tokens, tool calls, files inspected, build scope, and
+whether the result was still correct. Token savings and time savings are
+different things.
 
 ## 11. Report
 

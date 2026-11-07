@@ -62,7 +62,7 @@ audit to the `audit` skill, or the audit workflow moves out of setup entirely an
 setup just points at `/context:audit`. Then move `audit-rules.md` to whichever
 skill owns it, since a cross-skill reference is the thing to avoid.
 
-### other related plugins [in_progress, low]
+### other related plugins [in_review, low]
 
 plan: [other-related-plugins.md](other-related-plugins.md)
 
@@ -86,3 +86,20 @@ Fixing that means a `claude plugin eval` suite, which costs money per run: aroun
 36 `claude` child runs for a full pass. Deferred for that reason. The cases worth
 writing, and the grader wrinkle around `--ablation with-without`, are recorded
 under "Dropped from this plan" in [tests.md](tests.md).
+
+### port the audit script [draft, medium]
+
+Anthropic's `context-setup` skill measures context files with
+`scripts/audit_context.py` — stdlib only, `--json` output, and the source of the
+twelve finding codes this plugin inherited as prose. This plugin dropped the
+script and asks the model to eyeball the same thresholds instead.
+
+Port it to `skills/audit/scripts/`, or record why prose-only is right. Porting
+would make the per-file half of the audit deterministic and free, and would let
+`scripts/check.sh` run the audit against this very repository as a real test
+rather than a manifest check.
+
+Against it: Python may not be on `PATH`, the script covers only sections 1-2 of
+eleven, and the new finding codes (`OUTDATED_EMPHASIS`, `RULE_NEEDS_ENFORCEMENT`,
+`DEAD_INSTRUCTION`, `MCP_INSTRUCTIONS_LARGE`) need judgment a script cannot
+apply. Background in [../prior-art.md](../prior-art.md).
