@@ -102,6 +102,51 @@ right ones, and an audit should check these instead:
    (`MAX_MCP_OUTPUT_TOKENS`), and writes a text result over **50,000 characters**
    to a file instead of the conversation.
 
+#### Can an audit detect a chatty server?
+
+Yes, and exactly rather than by estimate — within limits. A server's `instructions`
+come back from an unauthenticated JSON-RPC `initialize` call. Measured against the
+`context7` server configured on this machine, 2026-11-07:
+
+```
+server      : Context7 4.5.0
+instructions: 707 chars, 713 UTF-8 bytes, ~178 tokens
+```
+
+The text matched the session's system prompt verbatim, which confirms the
+mechanism. For scale: this whole plugin costs 1105 bytes always-loaded, so one
+server's instructions rivals it.
+
+`claude mcp get <name>` does **not** help — it reports scope, transport and
+connection status only, with no tool count and no instructions.
+
+Three limits make probing partial, and they decide the design:
+
+1. **stdio servers cannot be probed without running them.** A server configured
+   as `npx @playwright/mcp@latest` would have to be spawned, which the audit's
+   own rules forbid ("don't install anything", "changes nothing").
+2. **Authenticated HTTP servers return 401** without credentials, which an audit
+   must not use.
+3. A probe is an outward network call to a third party, so it needs consent.
+
+So the measuring order is cheapest and broadest first:
+
+| Tier | How | Covers | Cost |
+| :- | :- | :- | :- |
+| 1 | have the user run `/context` and read the MCP line; `/usage` for per-server attribution | everything, including stdio and authenticated servers, with real session numbers | free, no risk |
+| 2 | read the repo's `.mcp.json` | what the repo imposes on everyone who clones it | free, in scope |
+| 3 | `initialize` probe of HTTP servers | exact `instructions` size | network call, consent, partial |
+
+Tier 1 is better than anything this plugin could build, and §5 currently does not
+mention it. Tier 2 is the part that belongs in a *repository* audit at all: a
+user's own global servers are personal configuration, not a finding about the
+repo. Tier 3 belongs in a reference file as an option, not in the default
+workflow.
+
+Proposed finding code `MCP_INSTRUCTIONS_LARGE`: warn above 1,000 characters of
+server instructions, noting the 4,096-character cut beyond which Claude sees
+nothing.
+
 Two of our existing instincts survive, with corrected reasons. "Prefer a CLI over
 a server that wraps shell work" is still the documented advice — "Tools like
 `gh`, `aws`, `gcloud`, and `sentry-cli` are still more context-efficient than MCP
