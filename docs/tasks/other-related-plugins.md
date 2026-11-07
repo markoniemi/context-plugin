@@ -112,6 +112,18 @@ Three consequences, and they are the task:
 3. **Scope** — is step 3 (the script) in this task, or a backlog entry of its own?
    It is the only step that would write code, and it is the largest.
 
-4. **Network** — step 4 needs web access for the published guidance. Without it I
-   can only report what is on this machine, which covers question one but not
-   question two.
+4. ~~**Network**~~ — **answered 2026-11-07: web access is already available.**
+   `WebSearch` and `WebFetch` are session tools; nothing had to be configured. A
+   live search confirmed it. Two findings from that one search, folded into the
+   steps above:
+
+   * A generic query returns twenty third-party SEO posts and no Anthropic page,
+     several repeating secondhand numbers ("80% less system prompt", "84% from
+     context editing" — the second is about API context editing, not Claude Code).
+     Step 4 must filter to `anthropic.com` / `docs.claude.com` for the primary
+     guidance and treat blog surveying as a separate, labelled pass.
+   * Two candidate gaps for step 5, to check rather than assume: whether section
+     10 "Measurement" names `/context` and `/usage`, and whether
+     `ROOT_TOO_LONG`'s 80-line warning squares with the widely repeated claim that
+     Anthropic recommends keeping CLAUDE.md under 200 lines. Our threshold was
+     inherited from the upstream skill, so a primary source has to settle it.
