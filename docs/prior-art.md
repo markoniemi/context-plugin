@@ -16,9 +16,30 @@ not Claude Code) that no primary source backs. They are not cited below.
 
 ## 1. The upstream skill
 
-**Confirmed by the author 2026-11-07: this plugin started from this skill.** The
-dates agree — the upstream files are stamped 2026-11-01, and this repository's
-first commit is 2026-11-06.
+**Confirmed by the author 2026-11-07: this plugin started from this skill**, and
+the direction of copying is measurable rather than inferred.
+
+This repository's first `skills/setup/SKILL.md` (commit `08907be`) is upstream's
+`context-setup/SKILL.md` with **8 insertions and 14 deletions**, and every one of
+those changes removes the Python script:
+
+| upstream | this repo's first version |
+| :- | :- |
+| `name: "context-setup"` | `name: setup` |
+| "run the audit script first" | "inventory the context files first" |
+| three steps invoking `python3 <skill-dir>/scripts/audit_context.py` | three steps doing the same counting by hand |
+| "rerun the script to confirm" | "recount to confirm" |
+| "The script's thresholds are heuristics" | "The thresholds are heuristics" |
+
+Everything else is byte-identical. That asymmetry fixes the direction:
+de-scripting a scripted skill takes those five edits, while the reverse would
+mean writing a working 10KB script and rewriting the prose to call it.
+
+Two further checks rule out the alternative that the synced skill is simply an
+earlier release of this plugin: no commit on any branch ever added
+`audit_context.py` or anything named `context-setup`, and the plugin cache holds
+exactly one version, `0.1.0` from 2026-11-06. The upstream files are stamped
+2026-11-01; this repository's first commit is 2026-11-06.
 
 `anthropic-skills:context-setup` ships in the synced skill set beside `docx`,
 `pdf`, `pptx`, `xlsx` and `skill-creator`:
@@ -90,6 +111,17 @@ So "Anthropic's skill" is a reasonable reading of where it is served from, but i
 is not established from anything checkable here, and no licence grants
 redistribution of its text. The README therefore credits the skill by the name it
 is distributed under and does not assert who wrote it.
+
+Two conclusions that do **not** follow, and should not be drawn from the above:
+
+* **That the skill does not exist or is not first-party.** It is on disk, dated
+  2026-11-01, served in the same namespace as `pdf`, `docx` and `skill-creator`.
+  One web search failing to find it in `anthropics/skills` is weak evidence; that
+  may not be where it is published.
+* **That `source: plugin` identifies an author.** It most plausibly records how
+  the skill entered the account — through some plugin rather than the curated
+  first-party set — which says nothing about who wrote it. Unconfirmed either
+  way from this machine.
 
 To resolve it, in increasing order of effort: check the skill's entry in
 `/plugin` or the claude.ai skills UI for an author and licence; look for the
