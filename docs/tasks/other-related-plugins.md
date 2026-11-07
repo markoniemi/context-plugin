@@ -100,12 +100,21 @@ Done on `main`, no branch (`create_branch` is off). Research in
 [../prior-art.md](../prior-art.md) — commits `d13478c`, `88ecc7d`, `0f0eec3` —
 then the rule changes it called for.
 
-**Answers to the open questions, from the human on 2026-11-07:** question 2, this
-plugin does more than the official skill, and the README now says what; question
-3, the script port is its own backlog entry. Question 1 was not answered
-explicitly, so the README states the observable resemblance to Anthropic's
-`context-setup` skill without claiming how it came about — sharpen that wording
-if the provenance is deliberate.
+**Answers to the open questions, from the human on 2026-11-07:** question 1, yes
+— this plugin started from the `context-setup` skill, and the README's "Origin
+and credit" section now says so plainly; question 2, it does more than that
+skill, and the README says what; question 3, the script port is its own backlog
+entry.
+
+One thing the confirmation did **not** settle: who holds the copyright on the
+upstream skill. It is served as `anthropic-skills:context-setup`, but its
+manifest entry reads `source: plugin` where the first-party siblings read
+`source: anthropic`, it is the only one of the ten with no `LICENSE.txt` beside
+it, and it is not findable in a public Anthropic repository. So the credit names
+the skill without asserting its author, and no licence is known to permit the
+near-verbatim `audit-rules.md`. Recorded under "Unresolved: who holds the
+copyright" in [../prior-art.md](../prior-art.md); it needs an answer before a
+public push.
 
 Three rules were wrong and are fixed:
 

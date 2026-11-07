@@ -28,20 +28,30 @@ Both skills also trigger without the slash command when a request matches their
 description — "set up CLAUDE.md for this repo" reaches setup, "my CLAUDE.md is a
 mess" or "Claude Code is burning tokens" reaches audit.
 
-## Relation to Anthropic's own tooling
+## Origin and credit
 
-Anthropic ships a `context-setup` skill covering the same ground as one skill
-with a setup mode and an audit mode, and this plugin's per-file audit rules
-closely match its `references/audit-rules.md`. Claude Code also has built-in
-commands that measure what an audit would otherwise estimate: `/context`,
-`/usage` and `/doctor prompt-audit`. Both skills here now defer to those rather
-than guessing.
+**This plugin started from the `context-setup` skill** distributed in Claude
+Code's synced skill set as `anthropic-skills:context-setup`. That skill is one
+skill with a setup mode and an audit mode; `skills/setup/references/templates.md`
+and the per-file rules in `skills/audit/references/audit-rules.md` began as its
+files of the same names, and much of `audit-rules.md` is still close to its
+wording. Credit for the twelve original finding codes, the context-loading rules
+and the file templates belongs there, not here.
 
-What this plugin adds over them: build scope and module targeting, build and test
-output, repository exploration discipline, documentation structure, and two
-skills that cannot be confused with each other instead of one guessing a mode
-from the request. [docs/prior-art.md](docs/prior-art.md) has the file-by-file
-comparison and the full list of what the official docs changed about these rules.
+What this plugin adds: build scope and module targeting, build and test output,
+repository exploration discipline, documentation structure, MCP cost, session
+habits, and two skills that cannot be confused with each other instead of one
+guessing a mode from the request. What it dropped: upstream's
+`scripts/audit_context.py`, which computed the per-file findings this plugin
+asks the model to check by reading.
+
+Claude Code also ships commands that measure what an audit would otherwise
+estimate — `/context`, `/usage` and `/doctor prompt-audit`. Both skills here
+defer to them rather than guessing.
+
+[docs/prior-art.md](docs/prior-art.md) has the file-by-file comparison, the
+unresolved licensing question, and what the official documentation changed about
+these rules.
 
 ## Install
 

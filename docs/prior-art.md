@@ -16,8 +16,12 @@ not Claude Code) that no primary source backs. They are not cited below.
 
 ## 1. The upstream skill
 
-`anthropic-skills:context-setup` ships in the synced Anthropic skill set beside
-`docx`, `pdf`, `pptx`, `xlsx` and `skill-creator`:
+**Confirmed by the author 2026-11-07: this plugin started from this skill.** The
+dates agree — the upstream files are stamped 2026-11-01, and this repository's
+first commit is 2026-11-06.
+
+`anthropic-skills:context-setup` ships in the synced skill set beside `docx`,
+`pdf`, `pptx`, `xlsx` and `skill-creator`:
 
 ```
 ~/.claude/skills/synced/<id>/context-setup/
@@ -60,6 +64,38 @@ targeting, repository exploration, build and test output (including
 `context-setup`.
 
 Net: upstream's context-file audit with the script removed and six areas added.
+
+### Unresolved: who holds the copyright
+
+Derivation is settled; **the licence is not**, and this matters before a public
+push because `audit-rules.md` is close to verbatim.
+
+What the evidence on this machine says:
+
+* The skill is surfaced as `anthropic-skills:context-setup`, in the synced skill
+  set, which is why it reads as first-party.
+* But its entry in that set's `manifest.json` records `source: plugin`, where
+  `pdf`, `docx`, `pptx` and `xlsx` record `source: anthropic` and `docs`,
+  `morning`, `skill-creator`, `google-workspace` and `import-memory` record
+  `source: anthropic-example`. `context-setup` is the only one of the ten with
+  `source: plugin`.
+* Those `source: anthropic` siblings each carry an Apache 2.0 `LICENSE.txt`.
+  **`context-setup` carries no licence file at all.**
+* A web search for a `context-setup` skill or an `audit_context.py` in
+  `anthropics/skills` found neither.
+* No `anthropic-skills` plugin appears in `claude plugin list`, so the namespace
+  is the synced set rather than an installed plugin whose source could be read.
+
+So "Anthropic's skill" is a reasonable reading of where it is served from, but it
+is not established from anything checkable here, and no licence grants
+redistribution of its text. The README therefore credits the skill by the name it
+is distributed under and does not assert who wrote it.
+
+To resolve it, in increasing order of effort: check the skill's entry in
+`/plugin` or the claude.ai skills UI for an author and licence; look for the
+`context-setup` skill in a public Anthropic repository; or rewrite
+`audit-rules.md` in original wording, which removes the question entirely and is
+the only option that does not depend on an answer.
 
 ## 2. Against the Claude Code documentation
 
