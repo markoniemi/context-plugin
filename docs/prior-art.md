@@ -1,0 +1,193 @@
+# Prior art and gaps
+
+What else covers this ground, and what this plugin gets wrong or misses against
+it. Researched 2026-11-07.
+
+Two sources matter. Everything else is noise.
+
+1. **Anthropic's `context-setup` skill** — this plugin's ancestor.
+2. **The Claude Code documentation** — the authority on how context actually
+   loads, and it has moved since these rules were written.
+
+Third-party blog posts were surveyed and added nothing: their themes were a
+strict subset of the documentation, plus two secondhand figures ("80% less system
+prompt", "84% from context editing" — the second is about API context editing,
+not Claude Code) that no primary source backs. They are not cited below.
+
+## 1. The upstream skill
+
+`anthropic-skills:context-setup` ships in the synced Anthropic skill set beside
+`docx`, `pdf`, `pptx`, `xlsx` and `skill-creator`:
+
+```
+~/.claude/skills/synced/<id>/context-setup/
+  SKILL.md                    4936 bytes
+  references/audit-rules.md   2988 bytes
+  references/templates.md     3232 bytes
+  scripts/audit_context.py   10385 bytes
+```
+
+It is a skill, not a plugin: no `.claude-plugin/`, no marketplace entry, no
+per-mode command. One name, and the mode is picked from the request.
+
+| | upstream | this plugin |
+| :- | :- | :- |
+| shape | one skill, `Setup` / `Audit` modes | two skills, `/context:setup` and `/context:audit` |
+| `references/audit-rules.md` | yes | yes — same filename |
+| `references/templates.md` | yes | yes — same filename |
+| measurement | `scripts/audit_context.py`, stdlib only, `--json` | none; the rules are prose |
+| audit scope | context files | context files plus eight more areas |
+
+**`skills/audit/references/audit-rules.md` is upstream's file, near-verbatim** —
+the same twelve finding codes in the same order with the same thresholds, and the
+same Fix wording in most sections. Four deltas, all ours: the header sentence,
+`SKILL_TOO_LONG` dropping the "move deterministic procedures into `scripts/`"
+clause, `LARGE_DIR_NOT_DENIED` inlining the deny JSON, and `NO_ROOT_FILE`
+pointing at `/context:setup`.
+
+The twelve codes:
+
+`NO_ROOT_FILE` · `ROOT_TOO_LONG` · `MODULE_TOO_LONG` · `UNSCOPED_RULE` ·
+`EAGER_IMPORT` · `IMPORT_MISSING` · `DUPLICATE_CONTENT` ·
+`AGENTS_CLAUDE_DUPLICATE` · `SKILL_TOO_LONG` · `SKILL_DESCRIPTION` ·
+`GENERIC_ADVICE` · `LARGE_DIR_NOT_DENIED`
+
+**Where this plugin is genuinely wider.** Upstream's audit stops at context
+files. Sections 3 and 5–9 of `skills/audit/SKILL.md` have no upstream
+counterpart: documentation structure, MCP overhead, build scope and module
+targeting, repository exploration, build and test output (including
+`references/maven-output.md`), and session habits. None of that is in
+`context-setup`.
+
+Net: upstream's context-file audit with the script removed and six areas added.
+
+## 2. Against the Claude Code documentation
+
+This is where the real findings are. Three of our rules are wrong, not merely
+incomplete.
+
+### Wrong
+
+| Where | Our claim | What the docs say |
+| :- | :- | :- |
+| `SKILL.md` §5 | "Tool definitions are paid for on every request." | MCP tool definitions are **deferred by default**; only tool names and server instructions enter context until Claude uses a specific tool. Our case for dropping MCP servers rests on a cost that no longer applies at full size. |
+| `audit-rules.md` `UNSCOPED_RULE` | unscoped rule → add `paths:` | Path-scoped rules are summarized away by compaction: "If a rule must persist across compaction, drop the `paths:` frontmatter or move it to the project-root CLAUDE.md." Blanket `paths:` advice can silently lose a rule in a long session. |
+| `audit-rules.md` thresholds | root warn > 80, info > 50; module > 100 | "**Size**: target under 200 lines per CLAUDE.md file." Claude Code already warns at startup and in `/status` when a file exceeds the recommended length, and again when files individually within it exceed a combined limit. Ours are stricter than the vendor's and presented as though authoritative. |
+
+### Missing, high value
+
+1. **Auto memory is absent entirely.** It is a second always-loaded mechanism:
+   the first 200 lines or 25KB of `~/.claude/projects/<project>/memory/MEMORY.md`
+   load at the start of every conversation, re-injected from disk after
+   compaction; topic files load on demand. Our §2 startup-cost formula is wrong
+   without it. Controls: the `/memory` toggle, `autoMemoryEnabled`,
+   `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`.
+
+2. **The product measures what we estimate.** §10 "Measurement" names no command.
+   It should name four:
+
+   * `/context` — live breakdown by category with optimization suggestions,
+     including which CLAUDE.md and auto memory files loaded.
+   * `/usage` — attributes recent usage to **skills, subagents, plugins and
+     individual MCP servers**, flags long context and cache misses once either
+     passes 10% of usage, and offers a `f` key that applies the fixes it can.
+   * `/doctor prompt-audit` — audits CLAUDE.md, AGENTS.md and everything under
+     `.claude/` for instructions written for older models, references to files
+     that no longer exist, and files that contradict each other, proposing edits
+     without applying them.
+   * `/insights` — HTML report on working patterns and friction.
+
+   An audit that does not start with `/context` and `/usage` is guessing where it
+   could be reading measured attribution.
+
+3. **CLAUDE.md is not enforcement.** "Claude treats them as context, not enforced
+   configuration. To block an action regardless of what Claude decides, use a
+   PreToolUse hook instead." Also: stacking emphasis on a line Claude keeps
+   missing "is a sign the line belongs in a hook", and deny rules hold in every
+   permission mode including auto and `bypassPermissions`. We say nothing about
+   any of this, and "NEVER commit to main" in a CLAUDE.md is a top-frequency
+   real-world pitfall.
+
+4. **Advice written for older models.** The docs keep an explicit outdated-advice
+   table. Three entries are things that appear in real context files:
+   * `IMPORTANT` / ALL CAPS emphasis — "Current ones follow a plainly worded
+     line, and piling on emphasis mostly makes Claude over-apply the rule."
+   * "the context window is your main constraint, manage it aggressively" — most
+     current models have a 1M window and compaction is automatic; the reason to
+     `/clear` is focus and cost, not capacity.
+   * "keep going, loop until done, don't be lazy" — "more likely to cause
+     over-work than fix a stall."
+
+5. **Compaction economics.** `/compact` reads the whole conversation to summarize
+   it, so it is itself a large request; `/clear` costs nothing. A focus can be
+   passed (`/compact keep the API changes`) or set permanently as a
+   `# Compact instructions` section in CLAUDE.md. `/autocompact 500k` moves the
+   automatic threshold. None of this is in §9.
+
+6. **Skill bodies are truncated after compaction** — 5,000 tokens per skill,
+   25,000 total, oldest dropped first, and truncation keeps the **start** of the
+   file. So: put the most important instructions at the top of a `SKILL.md`.
+   That is a concrete authoring rule, and it gives `SKILL_TOO_LONG` a real number
+   instead of a line count.
+
+7. **Hooks as a context tool.** A `PreToolUse` hook can filter output before
+   Claude ever sees it — the docs' example turns a 10,000-line log into hundreds
+   of tokens. Our §8 recommends redirect-then-grep written into each command by
+   hand; a hook does it for every Bash call, automatically. Strictly better, and
+   unmentioned.
+
+8. **Subagents also *save* context.** Verbose work delegated to a subagent keeps
+   the output in its window, returning only a summary. Our §9 treats subagents
+   mainly as a cost risk. Both are true; we state one.
+
+9. **Thinking is billed as output**, with a default budget that "can be tens of
+   thousands of tokens per request". Levers: `/effort`, `/config`,
+   `MAX_THINKING_TOKENS`. §9 mentions "reasoning effort" without the billing
+   fact that makes it matter.
+
+### Missing, worth a line at most
+
+* Code intelligence plugins for typed languages — symbol navigation instead of
+  grep-then-read-candidates.
+* Agent teams use roughly 7× the tokens of a standard session in plan mode.
+* Idle costs that are invisible by construction: session recap, idle compaction,
+  prompt suggestions, session-scoped scheduled tasks, cross-session messages and
+  goal check-ins all send the full context while nobody is typing.
+* `claude -p --bare` skips hooks, skills, plugins, MCP servers and every
+  CLAUDE.md — the right default for CI.
+* Import mechanics we never mention: max four hops; a path with spaces needs
+  backslashes; a quoted path is not imported at all; backticks prevent an import;
+  an import resolving outside the working directory needs one-time approval and
+  stays **silently disabled** if declined.
+* `AGENTS.md` is read directly since v2.1.277, so the `@AGENTS.md` import is now
+  often unnecessary — but a `CLAUDE.md` that tells Claude *in words* to read
+  `AGENTS.md` is a dead instruction, and on Windows the symlink alternative
+  checks out as a plain text file without `core.symlinks`.
+
+## 3. What this means for the plugin's reason to exist
+
+Harder to answer than it was. `/doctor prompt-audit` plus `/usage` attribution
+plus `f to fix` is a built-in instruction-file audit with **measured** per-skill,
+per-MCP-server attribution, where ours reads files and estimates.
+
+What is still ours after that: build scope and module targeting, build and test
+output, exploration discipline, and documentation structure. None of those are
+touched by the built-in commands or by the upstream skill. That is a narrower
+claim than the README currently makes, and an honest one.
+
+## 4. Keeping it short while fixing this
+
+The always-loaded budget is unaffected by almost all of the above, because only
+`name` and `description` load on every request:
+
+* `references/*.md` — free until read. **Put new rules here.**
+* `SKILL.md` body — paid when the skill fires, and now subject to the 5,000-token
+  truncation cap. Spend sparingly; one-line pointers to references.
+* `description` — always loaded, against the 1200-byte ceiling in
+  `scripts/check.sh`. Do not grow it.
+
+The three wrong items are edits, not additions, so they cost nothing. Four new
+finding codes (`OUTDATED_EMPHASIS`, `RULE_NEEDS_ENFORCEMENT`, `AUTO_MEMORY`,
+`DEAD_INSTRUCTION`) belong in `audit-rules.md` at roughly four lines each, where
+they are free until a condition matches. The loading and compaction facts belong
+in one new reference file rather than in the body.
