@@ -62,7 +62,7 @@ audit to the `audit` skill, or the audit workflow moves out of setup entirely an
 setup just points at `/context:audit`. Then move `audit-rules.md` to whichever
 skill owns it, since a cross-skill reference is the thing to avoid.
 
-### other related plugins [draft, low]
+### other related plugins [planned, low]
 
 plan: [other-related-plugins.md](other-related-plugins.md)
 
