@@ -64,6 +64,8 @@ skill owns it, since a cross-skill reference is the thing to avoid.
 
 ### other related plugins [draft, low]
 
+plan: [other-related-plugins.md](other-related-plugins.md)
+
 - are there other related plugins, maybe from some real authority?
 - is there some good best practices on how to reduce token usage?
 
