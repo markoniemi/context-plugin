@@ -1,6 +1,6 @@
 ---
 id: other-related-plugins
-status: in_review
+status: done
 priority: low
 ---
 

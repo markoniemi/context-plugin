@@ -62,7 +62,7 @@ audit to the `audit` skill, or the audit workflow moves out of setup entirely an
 setup just points at `/context:audit`. Then move `audit-rules.md` to whichever
 skill owns it, since a cross-skill reference is the thing to avoid.
 
-### other related plugins [in_review, low]
+### other related plugins [done, low]
 
 plan: [other-related-plugins.md](other-related-plugins.md)
 
@@ -89,10 +89,12 @@ under "Dropped from this plan" in [tests.md](tests.md).
 
 ### port the audit script [draft, medium]
 
-Anthropic's `context-setup` skill measures context files with
+The `context-setup` skill this plugin started from measures context files with
 `scripts/audit_context.py` — stdlib only, `--json` output, and the source of the
-twelve finding codes this plugin inherited as prose. This plugin dropped the
-script and asks the model to eyeball the same thresholds instead.
+twelve finding codes this plugin inherited. This plugin dropped the script and
+asks the model to check the same thresholds by reading instead. Who holds the
+copyright on that script is unresolved; see "Unresolved: who holds the copyright"
+in [../prior-art.md](../prior-art.md) before porting any of its code.
 
 Port it to `skills/audit/scripts/`, or record why prose-only is right. Porting
 would make the per-file half of the audit deterministic and free, and would let
