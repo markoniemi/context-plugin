@@ -70,9 +70,44 @@ incomplete.
 
 | Where | Our claim | What the docs say |
 | :- | :- | :- |
-| `SKILL.md` §5 | "Tool definitions are paid for on every request." | MCP tool definitions are **deferred by default**; only tool names and server instructions enter context until Claude uses a specific tool. Our case for dropping MCP servers rests on a cost that no longer applies at full size. |
+| `SKILL.md` §5 | "Tool definitions are paid for on every request." | MCP tool definitions are **deferred by default**; only tool names and server instructions enter context until Claude uses a specific tool. Our case for dropping MCP servers rests on a cost that no longer applies at full size. See "What MCP still costs" below. |
 | `audit-rules.md` `UNSCOPED_RULE` | unscoped rule → add `paths:` | Path-scoped rules are summarized away by compaction: "If a rule must persist across compaction, drop the `paths:` frontmatter or move it to the project-root CLAUDE.md." Blanket `paths:` advice can silently lose a rule in a long session. |
 | `audit-rules.md` thresholds | root warn > 80, info > 50; module > 100 | "**Size**: target under 200 lines per CLAUDE.md file." Claude Code already warns at startup and in `/status` when a file exceeds the recommended length, and again when files individually within it exceed a combined limit. Ours are stricter than the vendor's and presented as though authoritative. |
+
+### What MCP still costs
+
+The §5 correction is not "MCP is free". The docs are explicit that **"adding more
+MCP servers has minimal impact on your context window"** and that "Claude Code
+doesn't impose a fixed per-server tool cap; the practical limit is your context
+window budget." Server *count* is therefore the wrong metric. Four things are the
+right ones, and an audit should check these instead:
+
+1. **Server instructions load at session start**, per server, cut at **4,096
+   characters**. A tool description that loads upfront has the same limit; one
+   loaded through tool search gets 16,384. So a handful of chatty servers is a
+   real always-loaded cost even with deferral on, while a dozen terse ones are
+   not. Measure the instructions, not the servers.
+2. **Tool names load at session start** — all of them. Cheap per tool, not free
+   in bulk.
+3. **Deferral is not always active.** Claude Code loads every MCP tool upfront
+   when: the model is earlier than Opus 4 / Sonnet 4; the session runs on an
+   earlier Agent Platform model on Google Cloud; the deployment is Microsoft
+   Foundry hosted on Azure, which rejects tool search server-side and cannot be
+   overridden; `ENABLE_TOOL_SEARCH=false`; or a tool or server is exempted with
+   `anthropic/alwaysLoad` in `_meta` or `alwaysLoad` in the configuration. On any
+   of those, the old full-schema cost is back in force. An audit has to establish
+   the model and provider before judging MCP cost at all.
+4. **Tool output is where MCP actually spends now.** Claude Code warns above
+   **10,000 tokens** of output from one MCP tool, caps it at **25,000** by default
+   (`MAX_MCP_OUTPUT_TOKENS`), and writes a text result over **50,000 characters**
+   to a file instead of the conversation.
+
+Two of our existing instincts survive, with corrected reasons. "Prefer a CLI over
+a server that wraps shell work" is still the documented advice — "Tools like
+`gh`, `aws`, `gcloud`, and `sentry-cli` are still more context-efficient than MCP
+servers because they don't add any per-tool listing" — and "disable unused
+servers" is still there too, via `/mcp`. What dies is counting servers and
+treating the number as the finding.
 
 ### Missing, high value
 
