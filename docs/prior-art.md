@@ -123,11 +123,27 @@ Two conclusions that do **not** follow, and should not be drawn from the above:
   first-party set — which says nothing about who wrote it. Unconfirmed either
   way from this machine.
 
-To resolve it, in increasing order of effort: check the skill's entry in
-`/plugin` or the claude.ai skills UI for an author and licence; look for the
+#### What has been done about it
+
+`skills/audit/references/audit-rules.md` was **rewritten from scratch in original
+wording on 2026-11-07**, from the documented mechanics rather than from
+upstream's text. Measured afterwards: of 26 substantive lines upstream and 150
+in the rewrite, exactly one is identical — the heading `## AGENTS_CLAUDE_DUPLICATE`.
+
+The finding-code identifiers were deliberately kept. They are short functional
+labels, they have to keep matching `loading-model.md`, `audit/SKILL.md` and this
+document, and they are what upstream's script emits, so keeping them is what
+makes the `port the audit script` entry possible at all.
+
+**Still outstanding: `skills/setup/references/templates.md` is a complete copy** —
+all 39 of its substantive lines are identical to upstream's file of the same
+name. It is the larger exposure of the two and has not been touched.
+
+Beyond that, in increasing order of effort: check the skill's entry in `/plugin`
+or the claude.ai skills UI for an author and licence; look for the
 `context-setup` skill in a public Anthropic repository; or rewrite
-`audit-rules.md` in original wording, which removes the question entirely and is
-the only option that does not depend on an answer.
+`templates.md` too, which is the only route that does not depend on an answer
+from anyone.
 
 ## 2. Against the Claude Code documentation
 

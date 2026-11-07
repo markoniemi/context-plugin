@@ -1,60 +1,254 @@
 # Audit rules
 
-Each section is a check to run by hand during an audit. Read only the sections whose condition you actually see.
+One entry per thing that can be wrong with a project's context. Each gives the
+condition to look for and what to do about it.
 
-For how context actually loads, what survives compaction, and the numbers behind these thresholds, see `loading-model.md`.
+**Read selectively.** Find the entry for a condition you have actually observed;
+do not read the file through. Report the code so the user can look the reasoning
+up themselves.
+
+Thresholds here are this skill's, not the runtime's, and are deliberately tighter
+in places than the documented guidance — say which number you applied and why.
+`loading-model.md` has the mechanics they rest on: what loads when, what survives
+compaction, and the numbers the runtime itself enforces.
+
+## NO_ROOT_FILE
+
+No `CLAUDE.md` and no `AGENTS.md` at the repository root.
+
+Stop. An audit measures what exists, and nothing does. Hand over to
+`/context:setup`, which writes the files from scratch, and audit the result
+afterwards.
 
 ## ROOT_TOO_LONG
-Root CLAUDE.md/AGENTS.md is over the line limit (warn > 80, info > 50). It loads in every session.
-Fix: move module-specific content into that module's CLAUDE.md; move topic rules into path-scoped `.claude/rules/`; replace long explanations with a pointer to a doc; delete generic advice.
-Note the documented target is **under 200 lines per file**; 80 is this skill's stricter house limit, on the grounds that a root file is paid for on every request of every session. Say which number you are applying. Claude Code already warns at startup and in `/status` when a file passes the recommended length, and again when files individually under it exceed a combined limit — read those warnings instead of recomputing them.
+
+A root `CLAUDE.md` or `AGENTS.md` longer than 80 lines (note it above 50).
+
+The root file is the single most expensive file in the project: it is sent with
+every request of every session, whatever the task. The documented target is 200
+lines per file; 80 is the limit this skill argues for, on the grounds that a file
+nobody has to pay for twice is worth more than a complete one.
+
+Shrink it by relocation rather than deletion. Module-specific lines belong in
+that module's own `CLAUDE.md`, which loads only when Claude works there. Topic
+rules belong in `.claude/rules/` with `paths:` frontmatter. Long explanations
+become a sentence naming the document that holds them. Generic advice goes.
+
+Claude Code already warns about this at startup and in `/status`, including when
+several individually-acceptable files add up past a combined limit. Read its
+warnings before computing your own.
 
 ## MODULE_TOO_LONG
-A nested CLAUDE.md is over 100 lines. It loads whenever Claude touches that module.
-Fix: keep commands, layout and pitfalls; move reference material (API lists, schemas, long how-tos) into a doc in the module and point to it.
-A module file is cheaper than the root file because it loads only for its subtree, so judge it against the documented 200 rather than the root's 80 when the module is genuinely large.
 
-## EAGER_IMPORT
-An `@path` import pulls a large file (> 50 lines) into context whenever the importing file loads.
-Fix: replace `@docs/x.md` with a plain sentence: "See docs/x.md when <situation>." Keep `@imports` only for small files that are needed in every session (e.g. `@AGENTS.md`).
+A `CLAUDE.md` in a subdirectory longer than 100 lines.
 
-## IMPORT_MISSING
-An `@path` import points to a file that doesn't exist. It is silently useless.
-Fix: correct the path or remove the line.
+Cheaper than the root file, because it loads only when Claude touches that
+subtree — so judge a genuinely large module against the documented 200 instead.
+
+Keep what is specific to the module: its commands, its layout, its pitfalls. Move
+anything reference-shaped — endpoint lists, schemas, step-by-step procedures —
+into a document in the module and point at it in one line.
 
 ## UNSCOPED_RULE
-A `.claude/rules/*.md` file has no `paths:` frontmatter, so it loads in every session.
-Fix: if it applies only to part of the repo, add `paths:` globs. If it truly applies everywhere and is short, leave it — this is info only.
-**Trade-off, state it rather than skipping it:** a path-scoped rule loads into message history when Claude touches a matching file, so compaction summarizes it away; an unscoped rule is re-injected from disk after every compaction. A rule that must survive a long session therefore belongs unscoped, or in the root file. Do not recommend `paths:` for a rule that must never be forgotten.
+
+A file in `.claude/rules/` with no `paths:` frontmatter, so it loads in every
+session like the root file.
+
+Add `paths:` globs when the rule only ever applies to part of the repository. A
+short rule that genuinely applies everywhere can stay as it is; this is worth
+noting, not fixing.
+
+**State the trade-off rather than skipping it.** A path-scoped rule enters the
+conversation when Claude touches a matching file, which means compaction
+summarizes it away; an unscoped rule is re-injected from disk every time. So a
+rule that must still hold after six hours of work is one you leave unscoped, or
+move into the root file. Never recommend `paths:` for a rule that must not be
+forgotten.
+
+## AUTO_MEMORY_LARGE
+
+`~/.claude/projects/<project>/memory/MEMORY.md` is long, stale, or wrong.
+
+This is the always-loaded cost people miss, because it sits outside the
+repository and Claude wrote it, so no reviewer has necessarily seen it. The first
+200 lines or 25KB load at the start of every conversation and are re-injected
+after compaction; the topic files beside it load only when read.
+
+Anything past that threshold never loads at all and is dead weight — it belongs
+in a topic file. Content that contradicts the current code is worse than content
+that is merely long, because it is an instruction.
+
+Report what you find; do not edit another project's memory during an audit.
+`/memory` browses and edits it, and turns it off, as do `autoMemoryEnabled` and
+`CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`.
+
+## EAGER_IMPORT
+
+An `@path` import whose target runs past ~50 lines.
+
+An import is not a reference; the target is spliced into the importing file every
+time that file loads. `@README.md` in a root file means the whole README is
+charged to every session.
+
+Reserve imports for small files every session needs — `@AGENTS.md` is the usual
+one. For everything else write a sentence a human would write: name the file and
+the situation that calls for it. Splitting one long file into several imports
+tidies it without making it cheaper.
+
+## IMPORT_MISSING
+
+An `@path` whose target does not exist.
+
+It fails quietly: no error, no content, and a line of instruction that reads as
+though it worked. Correct the path or delete the line.
+
+## DEAD_INSTRUCTION
+
+A line that cannot have an effect, so whatever it costs is wasted. Five kinds:
+
+- **A pointer dressed as an instruction** — "see `AGENTS.md` for our
+  conventions". Claude reads that file only if it independently decides to.
+  Make it an import if every session needs it; otherwise accept that it is a
+  note to humans.
+- **An external import that was declined.** An `@path` resolving outside the
+  working directory needs one-time approval. Decline it and the import stays
+  disabled permanently, without asking again.
+- **An import inside backticks or a fenced block.** Import parsing skips both,
+  so the line is literal text.
+- **An import with unescaped spaces.** The path stops at the first space. Quoting
+  it does not help — a quoted path is not imported at all.
+- **An import more than four hops deep.** Four is the limit.
 
 ## DUPLICATE_CONTENT
-The same line appears in more than one context file, so it is paid for twice when both load.
-Fix: keep it in the most specific file that needs it (root if repo-wide, module file otherwise) and delete the others. Exception: a deliberate `AGENTS.md`/`CLAUDE.md` pair — use an import instead of copying.
+
+The same line present in two or more context files that can load together, so it
+is charged twice.
+
+Keep it in the most specific file that needs it and delete the rest: the root
+file if it is genuinely repository-wide, the module file otherwise. A deliberate
+`AGENTS.md` / `CLAUDE.md` pair is the exception — see below.
 
 ## AGENTS_CLAUDE_DUPLICATE
-Both AGENTS.md and CLAUDE.md exist at the same level with overlapping content.
-Fix: make CLAUDE.md `@AGENTS.md` plus Claude-only notes.
 
-## SKILL_TOO_LONG
-A SKILL.md body is over 500 lines (warn) or 300 (info). The whole body loads when the skill triggers.
-Fix: move detail into `references/` files and add a line in SKILL.md saying when to read each one.
-There is a harder reason than size: after compaction an invoked skill body is re-injected **capped at 5,000 tokens per skill and 25,000 tokens in total**, oldest dropped first, and truncation keeps the *start* of the file. So a long body silently loses its tail in any session that compacts.
+An `AGENTS.md` and a `CLAUDE.md` side by side with overlapping content.
 
-## SKILL_BODY_ORDER
-A SKILL.md puts its most important instructions — the refusals, the safety limits, the "do not" rules — late in the body.
-Fix: move them to the top. Truncation after compaction keeps the start of the file, so anything near the end is the first thing Claude stops seeing.
-
-## SKILL_DESCRIPTION
-A skill's description is missing, very short (< 50 chars, will undertrigger), or long (> 1024 chars, always-loaded cost).
-Fix: one or two sentences on what it does plus concrete trigger situations.
+Pick one home for the shared text. Recent Claude Code reads `AGENTS.md`
+directly, so often no `CLAUDE.md` is needed at all; where one is, reduce it to
+`@AGENTS.md` plus whatever is Claude-specific. Copying between them guarantees
+they drift.
 
 ## GENERIC_ADVICE
-Lines that look like advice Claude follows anyway ("write clean code", "follow best practices", "handle errors appropriately").
-Fix: delete them, or replace with the specific, non-obvious rule the author actually meant.
+
+Instructions Claude would follow without being told: write clean code, handle
+errors properly, use meaningful names, restatements of a language's own
+conventions, explanations of well-known frameworks.
+
+Delete, or replace with the specific non-obvious rule the author actually had in
+mind. A line earns its place by changing behaviour — an exact command, a
+convention that differs from the default, a "never do X here, because Y", a map
+of where things live.
+
+## OUTDATED_EMPHASIS
+
+Advice shaped for older models, which now works against the project rather than
+merely costing tokens. Three forms:
+
+- **Emphasis stacking** — `IMPORTANT`, `CRITICAL`, capitals, piled-on bold on a
+  line Claude keeps missing. A plainly worded line is followed; the emphasis
+  mostly causes the rule to be applied where it does not belong.
+- **"The context window is the main constraint."** Windows are large and
+  compaction is automatic. Keeping context small is about cost and focus now, not
+  about running out of room.
+- **"Keep going", "loop until done", "don't be lazy".** These produce over-work
+  more often than they rescue a stalled task.
+
+Strip the emphasis and keep the sentence. If the line is one that can never bend,
+it is `RULE_NEEDS_ENFORCEMENT` instead. If it keeps being missed, suspect the
+length of the file it lives in.
+
+## RULE_NEEDS_ENFORCEMENT
+
+A context file states something absolute — never commit to `main`, never touch
+`migrations/`, never read `.env`, always run the typecheck — and trusts Claude to
+comply.
+
+A context file is guidance, and Claude is permitted to judge that a guideline
+does not apply here. Anything that must hold regardless belongs where the harness
+enforces it: a `PreToolUse` hook to block the action, a `permissions.deny` rule
+for a path (deny holds in every permission mode), a `Stop` hook for a check that
+must pass before a turn can end.
+
+Leave genuine preferences in the context file, and keep the enforced set small —
+every hook and deny rule eventually fires when it should not, and each one needs
+maintaining. A project with dozens of them has mostly encoded preferences.
+
+## SKILL_TOO_LONG
+
+A `SKILL.md` body past 500 lines (note it past 300).
+
+The whole body enters context when the skill fires. There is a harder limit than
+taste, though: after compaction an invoked body comes back capped at 5,000 tokens
+for that skill and 25,000 across all of them, oldest dropped first.
+
+Move detail into `references/` and leave one line in the body saying when each
+file is worth reading. Deterministic procedures are better as a script than as
+prose.
+
+## SKILL_BODY_ORDER
+
+A `SKILL.md` that leaves its most important instructions — refusals, safety
+limits, the things it must not do — until late in the body.
+
+Truncation keeps the beginning of the file, so the end is the first thing to
+disappear in any session that compacts. Put what must survive at the top.
+
+## SKILL_DESCRIPTION
+
+A skill description that is missing, under ~50 characters, or over 1024.
+
+The description is always loaded and is the only thing deciding whether the skill
+fires. Too short and it never triggers; too long and every session pays for it.
+Write what the skill does, then the situations that should reach it, in the words
+a user would actually type.
+
+## MCP_INSTRUCTIONS_LARGE
+
+A configured MCP server declaring more than ~1,000 characters of instructions.
+
+Server count is the wrong thing to count. Tool definitions are deferred until
+Claude needs one, but every server's instructions and tool names load at session
+start, with instructions cut at 4,096 characters. One verbose server therefore
+costs more than several terse ones.
+
+Measure in this order, and do not skip to the last:
+
+1. **Ask the user for `/context` and `/usage`.** That covers every server,
+   including the stdio and authenticated ones nothing here can inspect, with
+   real numbers from a real session.
+2. **Read the repository's `.mcp.json`.** This is what the repository imposes on
+   everyone who clones it, and the only part that is a finding about the
+   repository at all — a developer's own global servers are their configuration,
+   not this project's problem.
+3. **Optionally, with the user's agreement, probe an HTTP server** as
+   `loading-model.md` describes. Never start a stdio server to measure it, and
+   never send credentials.
+
+To fix: ask the server's author for shorter instructions, or drop the server. A
+CLI like `gh`, `aws` or `gcloud` adds no per-tool listing at all and is the better
+choice for anything a shell can do. `/mcp` turns off servers that are configured
+but unused.
 
 ## LARGE_DIR_NOT_DENIED
-A large generated/vendored directory (node_modules, build, dist, target, .venv, generated, vendor) exists and is not in a `permissions.deny` Read rule.
-Fix: suggest deny rules in `.claude/settings.json` (shared) or `.claude/settings.local.json` (personal), after checking Claude doesn't need to read those files — a generated API client it must call correctly is a legitimate read. Info only.
+
+A generated or vendored directory — `node_modules`, `build`, `dist`, `target`,
+`.venv`, `generated`, `vendor` — that no `Read` deny rule covers.
+
+Worth noting rather than insisting on: check first that Claude has no reason to
+read those files. A generated API client it has to call correctly is a legitimate
+read, and denying it costs correctness to save tokens.
+
+Deny rules go in `.claude/settings.json` to apply to everyone, or
+`.claude/settings.local.json` to apply to one developer:
 
 ```json
 {
@@ -63,40 +257,3 @@ Fix: suggest deny rules in `.claude/settings.json` (shared) or `.claude/settings
   }
 }
 ```
-
-## NO_ROOT_FILE
-No CLAUDE.md or AGENTS.md at the repo root.
-Fix: there is nothing to audit. Run `/context:setup` to write one, then audit the result.
-
-## OUTDATED_EMPHASIS
-Instructions written for older models. Three forms, all of them now counterproductive rather than merely wasteful:
-- `IMPORTANT`, `CRITICAL`, `ALL CAPS`, bold stacking on a line Claude keeps missing. Current models follow a plainly worded line, and piling on emphasis makes Claude *over*-apply the rule.
-- Advice to treat the context window as the main constraint. Most current models have a 1M-token window and compaction is automatic; the reason to keep context small is cost and focus, not capacity.
-- "Keep going", "loop until done", "don't be lazy", "don't stop". More likely to cause over-work than to fix a stall.
-Fix: delete the emphasis and keep the plain sentence. If the line is one that can never bend, it is a `RULE_NEEDS_ENFORCEMENT` finding instead. If it keeps getting missed, the file is probably too long.
-
-## RULE_NEEDS_ENFORCEMENT
-A context file states a rule that must never bend — never commit to `main`, never touch `migrations/`, never read `.env`, always run the typecheck — and relies on Claude choosing to obey it.
-Fix: a context file is guidance, not configuration; Claude is allowed to decide a guideline doesn't apply. Move the absolute rules out: a `PreToolUse` hook to block an action, a `permissions.deny` rule for a path (deny holds in every permission mode), a `Stop` hook for a check that must pass. Keep preferences in the context file. Keep the enforced set small — a project with dozens of hooks has mostly encoded preferences.
-
-## AUTO_MEMORY_LARGE
-Auto memory is a second always-loaded mechanism, easy to miss because it lives outside the repo: the first 200 lines or 25KB of `~/.claude/projects/<project>/memory/MEMORY.md`, whichever comes first, loads at the start of every conversation and is re-injected from disk after compaction. Topic files beside it load on demand.
-Check: does `MEMORY.md` exist, how long is it, and does it still describe the project accurately? It is written by Claude, so nobody has necessarily reviewed it.
-Fix: content past the threshold is never loaded and is dead weight on disk — move it into topic files. Stale or wrong entries are worse than long ones, because they are instructions. Report it; do not edit another project's memory during an audit. `/memory` browses and edits it; the toggle there, `autoMemoryEnabled`, or `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` turns it off.
-
-## DEAD_INSTRUCTION
-An instruction that cannot do anything, so its cost buys nothing:
-- A sentence telling Claude in words to read another file ("see `AGENTS.md` for conventions"). Claude sees that file only if it decides to open it. Use an `@import` for something every session needs, or accept that it is a pointer, not an instruction.
-- An `@path` whose target is outside the working directory. These need a one-time approval; if it was declined, the import stays **silently** disabled and never prompts again.
-- An `@path` in backticks or a code fence — import parsing skips both, so it is literal text.
-- An `@path` with unescaped spaces. The path ends at the first space; a quoted path is not imported at all.
-- Imports nested more than four hops deep.
-Fix: convert to a real import, fix the path, or delete the line.
-
-## MCP_INSTRUCTIONS_LARGE
-A configured MCP server declares long `instructions`. With tool search on, tool *definitions* are deferred, but **tool names and server instructions still load at session start**, cut at 4,096 characters, so instructions are the always-loaded MCP cost — not the number of servers. Warn above 1,000 characters for one server.
-Measure in this order; do not skip to the last one:
-1. Have the user run `/context` and read the MCP line, and `/usage` for the share attributed to each server. This covers every server, including stdio and authenticated ones, with real numbers from a real session. Nothing this skill can compute beats it.
-2. Read the repo's `.mcp.json`. That is what the repo imposes on everyone who clones it, and the only part that is a finding *about the repo*; a user's own global servers are personal configuration.
-3. Optionally, with the user's agreement, probe an HTTP server as `loading-model.md` describes. Never spawn a stdio server to measure it, and never send credentials.
-Fix: ask the server's author to shorten its instructions, or drop the server. Prefer a CLI (`gh`, `aws`, `gcloud`, `sentry-cli`) over a server that wraps shell work, because a CLI adds no per-tool listing at all. `/mcp` disables servers that are configured but unused.
