@@ -87,7 +87,9 @@ Fixing that means a `claude plugin eval` suite, which costs money per run: aroun
 writing, and the grader wrinkle around `--ablation with-without`, are recorded
 under "Dropped from this plan" in [tests.md](tests.md).
 
-### port the audit script [draft, medium]
+### port the audit script [done, medium]
+
+plan: [port-the-audit-script.md](port-the-audit-script.md)
 
 The `context-setup` skill this plugin started from measures context files with
 `scripts/audit_context.py` — stdlib only, `--json` output, and the source of the
@@ -96,12 +98,11 @@ asks the model to check the same thresholds by reading instead. Who holds the
 copyright on that script is unresolved; see "Unresolved: who holds the copyright"
 in [../prior-art.md](../prior-art.md) before porting any of its code.
 
-Port it to `skills/audit/scripts/`, or record why prose-only is right. Porting
-would make the per-file half of the audit deterministic and free, and would let
-`scripts/check.sh` run the audit against this very repository as a real test
-rather than a manifest check.
-
-Against it: Python may not be on `PATH`, the script covers only sections 1-2 of
-eleven, and the new finding codes (`OUTDATED_EMPHASIS`, `RULE_NEEDS_ENFORCEMENT`,
-`DEAD_INSTRUCTION`, `MCP_INSTRUCTIONS_LARGE`) need judgment a script cannot
-apply. Background in [../prior-art.md](../prior-art.md).
+**Closed 2026-11-07 without porting it.** It covers twelve of eighteen codes,
+duplicates every threshold, reopens the licensing question the `audit-rules.md`
+rewrite closed, and is now a worse `/context` and `/doctor prompt-audit`. There
+is also no usable Python on the development machine — both `python` and
+`python3` resolve to the Microsoft Store stub, which passes a `command -v` check
+and then fails at runtime. Reasoning in
+[port-the-audit-script.md](port-the-audit-script.md) and
+[../prior-art.md](../prior-art.md).

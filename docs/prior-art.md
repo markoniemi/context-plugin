@@ -60,7 +60,7 @@ per-mode command. One name, and the mode is picked from the request.
 | shape | one skill, `Setup` / `Audit` modes | two skills, `/context:setup` and `/context:audit` |
 | `references/audit-rules.md` | yes | yes — same filename |
 | `references/templates.md` | yes | yes — same filename |
-| measurement | `scripts/audit_context.py`, stdlib only, `--json` | none; the rules are prose |
+| measurement | `scripts/audit_context.py`, stdlib only, `--json` | none; the rules are prose. Not ported — see below |
 | audit scope | context files | context files plus eight more areas |
 
 **`skills/audit/references/audit-rules.md` is upstream's file, near-verbatim** —
@@ -85,6 +85,43 @@ targeting, repository exploration, build and test output (including
 `context-setup`.
 
 Net: upstream's context-file audit with the script removed and six areas added.
+
+### The dropped script, and why it stays dropped
+
+Decided 2026-11-07, after reading it.
+
+`audit_context.py` is 245 lines of standard library. It walks the repository,
+classifies root / module / rule / skill files, counts lines, estimates tokens at
+characters ÷ 4, and emits all twelve original codes — line thresholds,
+frontmatter parsing for `paths:` and `description`, an import regex that
+correctly skips fenced blocks and code spans, seven regexes for generic advice,
+cross-file duplicate detection on normalised 30-character lines, and a
+`permissions.deny` substring check. Markdown table plus findings, or `--json`.
+
+Not ported, for four reasons in increasing weight:
+
+1. It covers twelve of this plugin's eighteen codes — sections 1 and 2 of eleven.
+   It reads no MCP configuration, build files, command output, exploration
+   habits or auto memory, and the six codes added on 2026-11-07 need judgment a
+   regex cannot apply.
+2. It duplicates every threshold. Upstream's copy has already drifted:
+   `MODULE_WARN = 100` while the message it prints says `target ≤ 60`.
+3. Copying 245 lines of its Python would reopen the licensing question that
+   rewriting `audit-rules.md` closed, for a larger file.
+4. `/context` reports real per-category token numbers where this estimates
+   characters ÷ 4, and `/doctor prompt-audit` audits instruction files for stale
+   references and contradictions, which it never attempted. A port would be a
+   worse `/context`; the script predates both commands.
+
+A practical note on the obvious mitigation: guarding it behind a Python check
+does not work. On the development machine both `python` and `python3` resolve to
+the Microsoft Store stub, which satisfies `command -v` and then exits 49 with an
+install prompt.
+
+The determinism this was wanted for already exists in smaller form — the
+always-loaded budget check in `scripts/check.sh` and `scripts/check.ps1`, which
+applies this plugin's thresholds to this plugin's files with no interpreter and
+one source of truth. Extending that is the route, not a general auditor.
 
 ### Unresolved: who holds the copyright
 
