@@ -123,6 +123,33 @@ always-loaded budget check in `scripts/check.sh` and `scripts/check.ps1`, which
 applies this plugin's thresholds to this plugin's files with no interpreter and
 one source of truth. Extending that is the route, not a general auditor.
 
+One real loss, so it is not rediscovered as a surprise: on a large monorepo an
+agent counting dozens of files by hand is slower and slips more than a script
+would. `/context` gives the authoritative startup figure there for free, so the
+loss is narrower than it looks.
+
+### Why two skills, and why this name
+
+Decided 2026-11-06, after asking whether `setup` is needed at all. `audit`
+already plans the fix and offers to apply it, so for a repo that has context
+files it covers the whole arc. What it cannot do is author from nothing: map the
+repo, find the per-module commands, ask the human for the pitfalls that cannot
+be inferred, and write the files. So the split is write versus measure. `setup`
+does no auditing, `audit` writes nothing unless asked, and no reference crosses
+from one skill into the other.
+
+One merged `context` skill was rejected. It would halve the always-loaded
+description cost, around 100-200 tokens per request, which is the plugin's own
+thesis turned on itself. But a skill that sometimes writes files and sometimes
+refuses to is harder to predict, and `audit`'s "writes nothing unless you say so"
+guarantee is what makes it safe on a repo you do not own. It would also come out
+as `/context:context`. Revisit if the two descriptions grow.
+
+The plugin is named `context` because a plugin's skills are invoked as
+`/<plugin>:<skill>`, which gives `/context:setup` and `/context:audit`.
+`context-plugin` is the repository and the marketplace. `token-usage-plugin` was
+rejected: token usage is the motivation, not the scope.
+
 ### Unresolved: who holds the copyright
 
 Derivation is settled; **the licence is not**, and this matters before a public

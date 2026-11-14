@@ -82,10 +82,13 @@ delete useful architectural knowledge just to shorten a file.
 
 ## 3. Documentation
 
-Check whether README files carry excessive technical detail, whether documents
-repeat each other, whether build instructions are duplicated, and whether module
-docs are mixed into global docs. Recommend linking to docs rather than copying
-them into a context file, so they load only when needed.
+Check whether README files carry excessive technical detail (`README_DETAIL`),
+whether documents repeat each other, whether build instructions are duplicated,
+and whether module docs are mixed into global docs. The shape to recommend: a
+small root README that links out, a small README in a directory that is a real
+unit of the project, and `docs/` for documentation with no directory of its own.
+Recommend linking to docs rather than copying them into a context file, so they
+load only when needed.
 
 ## 4. Skills
 

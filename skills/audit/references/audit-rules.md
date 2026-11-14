@@ -51,6 +51,19 @@ Fix: reserve imports for small files every session needs (`@AGENTS.md`).
 Otherwise name the file and the situation in a sentence. Splitting one long file
 into several imports does not reduce its cost.
 
+## README_DETAIL
+A README carrying detail that belongs elsewhere: reference material, procedures
+or per-module notes in the root file. No line count applies. A README loads only
+when something reads it (an `@README.md` import, repo mapping, an agent
+exploring), so the cost is paid each time an agent orients itself, not every
+request.
+Fix: keep the root `README.md` small — what the project is, how to build and run
+it, and links. Give a directory that is a real unit of the project a small
+`README.md` of its own, linked from the root. Documentation with no directory of
+its own goes in `docs/`, linked from the root README, not appended to it. A
+directory README and that module's `CLAUDE.md` must not repeat each other (see
+`DUPLICATE_CONTENT`). Do not flag a module for lacking a README.
+
 ## IMPORT_MISSING
 An `@path` whose target does not exist. No error, no content.
 Fix: correct the path or delete the line.
